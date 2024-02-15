@@ -20,14 +20,16 @@ borders_1914 <- st_read("https://raw.githubusercontent.com/aourednik/historical-
 
 ## 1914
 found_1914 <- borders_1914 %>%
-  filter(grepl("Togoland|German.*Africa|Kamerun", NAME))
+  filter(grepl("Togoland|German.*Africa|Kamerun", NAME))%>%
+  st_transform(4326)
 
 colonies <- found_1914 %>%
               dplyr::select(name = NAME)
 
 found_today <- ne_countries(returnclass = "sf", scale = "medium") %>%
   filter(grepl("Mariana|Palau|Marshall|Nauru|Samoa|Solomon|Micronesia", admin))%>%
-  filter(admin != "American Samoa")
+  filter(admin != "American Samoa")%>%
+  st_transform(4326)
 ## Samoa is what used to be Western Samoa (German colony), American Samoa was colonized by US
 ## Mariana Islands are Northern Mariana Islands (German colony), Southern islands are Guam (US colony)
 
@@ -35,16 +37,10 @@ colonies <- colonies %>%
   bind_rows(found_today %>%
               dplyr::select(name = admin))
 
-fn <-  "test_colonies.geojson"
-if(file.exists(fn)){
-  file.remove(fn)
-}
-write_sf(final, fn)
-
 
 ## open street map
 
-## brandenburg gold coast
+## brandenburg gold coast - makes problems
 
 osmquery <- opq_osm_id(c(240909315,216464672), type = "way")%>%
   osmdata_sf()
@@ -53,46 +49,47 @@ colonies <- colonies %>%
   bind_rows(osmquery$osm_polygons %>%
               mutate(name = "Brandenburg Gold Coast")%>%
               group_by(name)%>%
-              summarize(geometry = st_union(geometry)))
+              summarize(geometry = st_union(geometry))%>%
+              st_transform(4326))
 
-## st thomas
+# ## st thomas - makes problems
+# 
+# osmquery <- opq_osm_id(2754159, type = "relation")%>%
+#   osmdata_sf()
+# 
+# colonies <- colonies %>%
+#   bind_rows(osmquery$osm_multipolygons %>%
+#               mutate(name = "St. Thomas")%>%
+#               dplyr::select(name))
 
-osmquery <- opq_osm_id(2754159, type = "relation")%>%
-  osmdata_sf()
+# ## arguin - makes problems
+# 
+# osmquery <- opq_osm_id(4109731, type = "way")%>%
+#   osmdata_sf()
+# 
+# colonies <- colonies %>%
+#   bind_rows(osmquery$osm_polygons %>%
+#     mutate(name = "Arguin")%>%
+#       dplyr::select(name))
 
-colonies <- colonies %>%
-  bind_rows(osmquery$osm_multipolygons %>%
-              mutate(name = "St. Thomas")%>%
-              dplyr::select(name))
-
-## arguin
-
-osmquery <- opq_osm_id(4109731, type = "way")%>%
-  osmdata_sf()
-
-colonies <- colonies %>%
-  bind_rows(osmquery$osm_polygons %>%
-    mutate(name = "Arguin")%>%
-      dplyr::select(name))
-
-## bismarck archipelago
-
-osmquery <- opq_osm_id(c(3777382, 3777383, 3777381, 3777384, 311780, 311779, 311778), type = "relation")%>%
-  osmdata_sf()
-
-provinces <- osmquery$osm_multipolygons %>%
-  summarize(geometry = st_union(geometry))
-
-result <- st_intersection(provinces, countries %>% filter(name_long == "Papua New Guinea")) %>%  
-  st_cast("POLYGON")%>%
-  mutate(area = st_area(geometry))%>%
-  ## biggest area is main island, not part of archipelago
-  filter(area != max(area))%>%
-  summarize(geometry = st_union(geometry))%>%
-  mutate(name = "Bismarck Archipelago")
-
-colonies <- colonies %>%
-  bind_rows(result)
+# ## bismarck archipelago - makes problems
+# 
+# osmquery <- opq_osm_id(c(3777382, 3777383, 3777381, 3777384, 311780, 311779, 311778), type = "relation")%>%
+#   osmdata_sf()
+# 
+# provinces <- osmquery$osm_multipolygons %>%
+#   summarize(geometry = st_union(geometry))
+# 
+# result <- st_intersection(provinces, countries %>% filter(name_long == "Papua New Guinea")) %>%  
+#   st_cast("POLYGON")%>%
+#   mutate(area = st_area(geometry))%>%
+#   ## biggest area is main island, not part of archipelago
+#   filter(area != max(area))%>%
+#   summarize(geometry = st_union(geometry))%>%
+#   mutate(name = "Bismarck Archipelago")
+# 
+# colonies <- colonies %>%
+#   bind_rows(result)
 
 # ## to do (manually?)
 
@@ -132,3 +129,8 @@ final <- colonies %>%
                                   "Solomon Islands" = "North Solomon Islands")))%>%
   left_join(data)
 
+fn <-  "test_colonies.geojson"
+if(file.exists(fn)){
+  file.remove(fn)
+}
+write_sf(final, fn)
