@@ -40,17 +40,20 @@ colonies <- colonies %>%
 
 ## open street map
 
-## brandenburg gold coast - makes problems
+# ## brandenburg gold coast - makes problems
+# 
+# osmquery <- opq_osm_id(c(240909315,216464672), type = "way")%>%
+#   osmdata_sf()
+# 
+# colonies <- colonies %>%
+#   bind_rows(osmquery$osm_polygons %>%
+#               mutate(name = "Brandenburg Gold Coast")%>%
+#               group_by(name)%>%
+#               summarize(geometry = st_union(geometry))%>%
+#               st_transform(4326))
 
-osmquery <- opq_osm_id(c(240909315,216464672), type = "way")%>%
-  osmdata_sf()
-
-colonies <- colonies %>%
-  bind_rows(osmquery$osm_polygons %>%
-              mutate(name = "Brandenburg Gold Coast")%>%
-              group_by(name)%>%
-              summarize(geometry = st_union(geometry))%>%
-              st_transform(4326))
+ggplot(colonies)+
+  geom_sf(aes(fill = name))
 
 # ## st thomas - makes problems
 # 
@@ -134,3 +137,5 @@ if(file.exists(fn)){
   file.remove(fn)
 }
 write_sf(final, fn)
+
+write_sf(colonies, "test.shp")
