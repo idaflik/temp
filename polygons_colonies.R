@@ -35,6 +35,13 @@ colonies <- colonies %>%
   bind_rows(found_today %>%
               dplyr::select(name = admin))
 
+fn <-  "test_colonies.geojson"
+if(file.exists(fn)){
+  file.remove(fn)
+}
+write_sf(final, fn)
+
+
 ## open street map
 
 ## brandenburg gold coast
@@ -81,8 +88,8 @@ result <- st_intersection(provinces, countries %>% filter(name_long == "Papua Ne
   mutate(area = st_area(geometry))%>%
   ## biggest area is main island, not part of archipelago
   filter(area != max(area))%>%
-  mutate(name = "Bismarck Archipelago")%>%
-  dplyr::select(name)
+  summarize(geometry = st_union(geometry))%>%
+  mutate(name = "Bismarck Archipelago")
 
 colonies <- colonies %>%
   bind_rows(result)
@@ -125,8 +132,3 @@ final <- colonies %>%
                                   "Solomon Islands" = "North Solomon Islands")))%>%
   left_join(data)
 
-fn <-  "test_colonies.geojson"
-if(file.exists(fn)){
-  file.remove(fn)
-}
-write_sf(final, fn)
