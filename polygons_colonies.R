@@ -52,9 +52,6 @@ colonies <- colonies %>%
 #               summarize(geometry = st_union(geometry))%>%
 #               st_transform(4326))
 
-ggplot(colonies)+
-  geom_sf(aes(fill = name))
-
 # ## st thomas - makes problems
 # 
 # osmquery <- opq_osm_id(2754159, type = "relation")%>%
@@ -137,5 +134,3 @@ if(file.exists(fn)){
   file.remove(fn)
 }
 write_sf(final, fn)
-
-write_sf(colonies, "test.shp")
