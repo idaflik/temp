@@ -215,7 +215,7 @@
         }
 
         // Load GeoJSON data for background countries and render
-        d3.json("https://raw.githubusercontent.com/idaflik/data/master/current_borders.geojson").then(function(data) {
+        d3.json("https://raw.githubusercontent.com/idaflik/temp/main/current_borders.geojson").then(function(data) {
             backgroundPath = d3.geoPath().projection(initialProjection);
 
             svg.selectAll("path.background")
@@ -237,7 +237,7 @@
             });
 
             // Load GeoJSON data for territories and render
-        d3.json("https://raw.githubusercontent.com/idaflik/data/master/test_colonies.geojson").then(function(data) {
+        d3.json("https://raw.githubusercontent.com/idaflik/temp/main/test_colonies.geojson").then(function(data) {
             
             console.log(data)
 
