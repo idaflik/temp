@@ -5,6 +5,8 @@ needs(tidyverse,
       rnaturalearth,
       osmdata)
 
+data <- read_csv("input/colonies_details.csv")
+
 countries <- ne_countries(returnclass = "sf", scale = "medium") %>%
   dplyr::select(name_long)
 
@@ -37,8 +39,39 @@ colonies <- colonies %>%
   bind_rows(found_today %>%
               dplyr::select(name = admin))
 
+# ## to do (manually drawn shapes with geojson.io)
 
-## open street map
+# ## German concession in Tianjin
+# https://en.wikipedia.org/wiki/Foreign_concessions_in_Tianjin
+
+shape <- st_read("input/tianjin.geojson") %>%
+  mutate(name = c("Jiaozhou Bay", "Tianjin"))
+
+colonies <- colonies %>%
+  bind_rows(shape %>%
+              filter(name == "Tianjin"))
+
+shape <- shape %>%
+  filter(name == "Jiaozhou Bay")%>%
+  st_intersection(countries %>% st_make_valid())
+
+colonies <- colonies %>%
+  bind_rows(shape %>%
+              dplyr::select(-name_long))
+
+## Jiaozhou Bay
+# https://en.wikipedia.org/wiki/Kiautschou_Bay_Leased_Territory
+
+## Wituland
+# https://en.wikipedia.org/wiki/Wituland
+
+## Kaiser Wilhelmsland
+# https://de.wikipedia.org/wiki/Kaiser-Wilhelms-Land
+
+## welserland
+# https://de.wikipedia.org/wiki/Klein-Venedig_(Venezuela)
+
+## open street map - makes problems
 
 # ## brandenburg gold coast - makes problems
 # 
@@ -91,25 +124,7 @@ colonies <- colonies %>%
 # colonies <- colonies %>%
 #   bind_rows(result)
 
-# ## to do (manually?)
-
-# ## German concession in Tianjin
-# https://en.wikipedia.org/wiki/Foreign_concessions_in_Tianjin
-
-## Jiaozhou Bay
-# https://en.wikipedia.org/wiki/Kiautschou_Bay_Leased_Territory
-
-## Wituland
-# https://en.wikipedia.org/wiki/Wituland
-
-## Kaiser Wilhelmsland
-# https://de.wikipedia.org/wiki/Kaiser-Wilhelms-Land
-
-## welserland
-# https://de.wikipedia.org/wiki/Klein-Venedig_(Venezuela)
-
 ## finalize / add info
-data <- read_csv("input/colonies_details.csv")
 
 missing <- data %>%
   anti_join(
