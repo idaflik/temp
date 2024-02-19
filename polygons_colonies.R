@@ -142,7 +142,8 @@ final <- colonies %>%
                                   "Northern Mariana Islands" = "Mariana Islands",
                                   "Federated States of Micronesia" = "Caroline Islands",
                                   "Solomon Islands" = "North Solomon Islands")))%>%
-  left_join(data)
+  left_join(data)%>%
+  st_make_valid()
 
 fn <-  "test_colonies.geojson"
 if(file.exists(fn)){
