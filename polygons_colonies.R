@@ -44,20 +44,20 @@ colonies <- colonies %>%
 # ## German concession in Tianjin
 # https://en.wikipedia.org/wiki/Foreign_concessions_in_Tianjin
 
-shape <- st_read("input/tianjin.geojson") %>%
+shape <- st_read("input/tianjin_rewound.geojson") %>%
   mutate(name = c("Jiaozhou Bay", "Tianjin"))
 
 colonies <- colonies %>%
   bind_rows(shape %>%
               filter(name == "Tianjin"))
 
-shape <- shape %>%
-  filter(name == "Jiaozhou Bay")%>%
-  st_intersection(countries %>% st_make_valid())
-
-colonies <- colonies %>%
-  bind_rows(shape %>%
-              dplyr::select(-name_long))
+# shape <- shape %>%
+#   filter(name == "Jiaozhou Bay")%>%
+#   st_intersection(countries %>% st_make_valid())
+# 
+# colonies <- colonies %>%
+#   bind_rows(shape %>%
+#               dplyr::select(-name_long))
 
 ## Jiaozhou Bay
 # https://en.wikipedia.org/wiki/Kiautschou_Bay_Leased_Territory
