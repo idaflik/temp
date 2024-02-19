@@ -3,7 +3,6 @@ needs(tidyverse,
       sf,
       ggplot2,
       rnaturalearth,
-      osmdata,
       geojsonrewind,
       jsonlite,
       lawn)
@@ -13,35 +12,6 @@ data <- read_csv("input/colonies_details.csv")
 countries <- ne_countries(returnclass = "sf", scale = "medium") %>%
   dplyr::select(name_long)
 
-fn <- "current_borders.geojson"
-if(file.exists(fn)){
-  file.remove(fn)
-}
-write_sf(countries, fn)
-
-# borders_1900 <- st_read("https://raw.githubusercontent.com/aourednik/historical-basemaps/master/geojson/world_1900.geojson")
-borders_1914 <- st_read("https://raw.githubusercontent.com/aourednik/historical-basemaps/master/geojson/world_1914.geojson")
-# borders_1700 <- st_read("https://raw.githubusercontent.com/aourednik/historical-basemaps/master/geojson/world_1700.geojson")
-
-## 1914
-found_1914 <- borders_1914 %>%
-  filter(grepl("Togoland|German.*Africa|Kamerun", NAME))%>%
-  st_transform(4326)
-
-colonies <- found_1914 %>%
-              dplyr::select(name = NAME)
-
-found_today <- ne_countries(returnclass = "sf", scale = "medium") %>%
-  filter(grepl("Mariana|Palau|Marshall|Nauru|Samoa|Solomon|Micronesia", admin))%>%
-  filter(admin != "American Samoa")%>%
-  st_transform(4326)
-## Samoa is what used to be Western Samoa (German colony), American Samoa was colonized by US
-## Mariana Islands are Northern Mariana Islands (German colony), Southern islands are Guam (US colony)
-
-colonies <- colonies %>%
-  bind_rows(found_today %>%
-              dplyr::select(name = admin))
-
 # ## to do (manually drawn shapes with geojson.io)
 
 # ## German concession in Tianjin
@@ -50,17 +20,18 @@ colonies <- colonies %>%
 shape <- st_read("input/tianjin.geojson") %>%
   mutate(name = c("Jiaozhou Bay", "Tianjin"))
 
-colonies <- colonies %>%
-  bind_rows(shape %>%
-              filter(name == "Tianjin"))
+shapes <- shape %>%
+              filter(name == "Tianjin")
 
 shape <- shape %>%
   filter(name == "Jiaozhou Bay")%>%
   st_intersection(countries %>% st_make_valid())
 
-colonies <- colonies %>%
+shapes <- shapes %>%
   bind_rows(shape %>%
               dplyr::select(-name_long))
+
+write_sf(shapes, "pre_rewind.geojson")
 
 ## Jiaozhou Bay
 # https://en.wikipedia.org/wiki/Kiautschou_Bay_Leased_Territory
