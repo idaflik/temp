@@ -56,12 +56,12 @@ final <- colonies %>%
   left_join(data)%>%
   st_make_valid()
 
-## import rewound manual geometries
-
-shapes <- st_read("rewound.geojson")
-
-final <- final %>%
-  bind_rows(shapes)
+# ## import rewound manual geometries
+# 
+# shapes <- st_read("rewound.geojson")
+# 
+# final <- final %>%
+#   bind_rows(shapes)
 
 fn <-  "test_colonies.geojson"
 if(file.exists(fn)){
