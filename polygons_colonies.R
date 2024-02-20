@@ -8,6 +8,9 @@ needs(tidyverse,
       jsonlite,
       lawn)
 
+## to do: add arguin to background countries
+## brandenburg gold coast and tianjin are too small; think of solution
+
 data <- read_csv("input/colonies_details.csv")
 
 countries <- ne_countries(returnclass = "sf", scale = "medium") %>%
@@ -42,102 +45,7 @@ colonies <- colonies %>%
   bind_rows(found_today %>%
               dplyr::select(name = admin))
 
-# ## to do (manually drawn shapes with geojson.io)
-
-# ## German concession in Tianjin
-# https://en.wikipedia.org/wiki/Foreign_concessions_in_Tianjin
-
-shape <- st_read("input/tianjin.geojson") %>%
-  mutate(name = c("Jiaozhou Bay", "Tianjin"))
-
-colonies <- colonies %>%
-  bind_rows(shape %>%
-              filter(name == "Tianjin"))
-
-shape <- shape %>%
-  filter(name == "Jiaozhou Bay")%>%
-  st_intersection(countries %>% st_make_valid())
-
-colonies <- colonies %>%
-  bind_rows(shape %>%
-              dplyr::select(-name_long))
-
-## Jiaozhou Bay
-# https://en.wikipedia.org/wiki/Kiautschou_Bay_Leased_Territory
-
-## Wituland
-# https://en.wikipedia.org/wiki/Wituland
-
-## Kaiser Wilhelmsland
-# https://de.wikipedia.org/wiki/Kaiser-Wilhelms-Land
-
-## welserland
-# https://de.wikipedia.org/wiki/Klein-Venedig_(Venezuela)
-
-## open street map - makes problems
-
-# ## brandenburg gold coast - makes problems
-# 
-# osmquery <- opq_osm_id(c(240909315,216464672), type = "way")%>%
-#   osmdata_sf()
-# 
-# colonies <- colonies %>%
-#   bind_rows(osmquery$osm_polygons %>%
-#               mutate(name = "Brandenburg Gold Coast")%>%
-#               group_by(name)%>%
-#               summarize(geometry = st_union(geometry))%>%
-#               st_transform(4326))
-
-# ## st thomas - makes problems
-# 
-# osmquery <- opq_osm_id(2754159, type = "relation")%>%
-#   osmdata_sf()
-# 
-# colonies <- colonies %>%
-#   bind_rows(osmquery$osm_multipolygons %>%
-#               mutate(name = "St. Thomas")%>%
-#               dplyr::select(name))
-
-# ## arguin - makes problems
-# 
-# osmquery <- opq_osm_id(4109731, type = "way")%>%
-#   osmdata_sf()
-# 
-# colonies <- colonies %>%
-#   bind_rows(osmquery$osm_polygons %>%
-#     mutate(name = "Arguin")%>%
-#       dplyr::select(name))
-
-# ## bismarck archipelago - makes problems
-# 
-# osmquery <- opq_osm_id(c(3777382, 3777383, 3777381, 3777384, 311780, 311779, 311778), type = "relation")%>%
-#   osmdata_sf()
-# 
-# provinces <- osmquery$osm_multipolygons %>%
-#   summarize(geometry = st_union(geometry))
-# 
-# result <- st_intersection(provinces, countries %>% filter(name_long == "Papua New Guinea")) %>%  
-#   st_cast("POLYGON")%>%
-#   mutate(area = st_area(geometry))%>%
-#   ## biggest area is main island, not part of archipelago
-#   filter(area != max(area))%>%
-#   summarize(geometry = st_union(geometry))%>%
-#   mutate(name = "Bismarck Archipelago")
-# 
-# colonies <- colonies %>%
-#   bind_rows(result)
-
 ## finalize / add info
-
-missing <- data %>%
-  anti_join(
-    colonies %>%
-      mutate(name = str_replace_all(name,
-                                    c("German E\\. Africa \\(Tanganyika\\)" = "German East Africa",
-                                      "Northern Mariana Islands" = "Mariana Islands",
-                                      "Federated States of Micronesia" = "Caroline Islands",
-                                      "Solomon Islands" = "North Solomon Islands")))
-  )
 
 final <- colonies %>%
   mutate(name = str_replace_all(name,
@@ -147,6 +55,13 @@ final <- colonies %>%
                                   "Solomon Islands" = "North Solomon Islands")))%>%
   left_join(data)%>%
   st_make_valid()
+
+## import rewound manual geometries
+
+shapes <- st_read("rewound.geojson")
+
+final <- final %>%
+  bind_rows(shapes)
 
 fn <-  "test_colonies.geojson"
 if(file.exists(fn)){
