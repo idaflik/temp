@@ -8,6 +8,8 @@ needs(tidyverse,
       jsonlite,
       lawn)
 
+## to do: use this tool to rewind everything: https://observablehq.com/@bumbeishvili/rewind-geojson
+
 ## to do: add arguin to background countries
 ## brandenburg gold coast and tianjin are too small; think of solution
 
@@ -56,14 +58,14 @@ final <- colonies %>%
   left_join(data)%>%
   st_make_valid()
 
-# ## import rewound manual geometries
-# 
-# shapes <- st_read("rewound.geojson")
-# 
-# final <- final %>%
-#   bind_rows(shapes)
+## import pre-rewind manual geometries
 
-fn <-  "test_colonies.geojson"
+shapes <- st_read("pre_rewind.geojson")
+
+final <- final %>%
+  bind_rows(shapes)
+
+fn <-  "test_colonies_pre_rewind.geojson"
 if(file.exists(fn)){
   file.remove(fn)
 }
