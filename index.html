@@ -165,6 +165,10 @@
         var guessPath = null; // Separate path generator for countries to be guessed
         var tooltip = d3.select("#tooltip");
 
+        // 1000 because layout width is max-width 1000; adjust accordingly
+        var shiftRight = Math.min(window.innerWidth, 1000) * 0.5;
+        var shiftDown = window.innerHeight * 0.3;
+
         d3.select(".info-icon")
                 .on("mouseover", function (event) {
                     tooltip.style("display", "block")
@@ -188,12 +192,13 @@
 
         // Define initial projection
         var projectionType = projectionSelect.value;
-        var initialProjection = d3[projectionType]().scale(initialScale);
+        var initialProjection = d3[projectionType]().translate([shiftRight, shiftDown]).scale(initialScale);
 
         // Define path generator for background countries
         function updateBackgroundProjection(projectionType) {
             var projection = d3[projectionType]()
-                .scale(initialScale);
+            .translate([shiftRight, shiftDown])
+            .scale(initialScale);
 
             backgroundPath.projection(projection);
 
@@ -205,7 +210,8 @@
         // Define path generator for countries to be guessed
         function updateGuessProjection(projectionType) {
             var projection = d3[projectionType]()
-                .scale(initialScale);
+            .translate([shiftRight, shiftDown])
+            .scale(initialScale);
 
             guessPath.projection(projection);
 
@@ -243,8 +249,6 @@
 
             var countries = data.features;
             var selectedCountryIndex = -1;
-
-            console.log(countries)
 
             var correctCountryIndices = []; // Array to store indices of correctly guessed countries
 
